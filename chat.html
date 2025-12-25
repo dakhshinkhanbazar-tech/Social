@@ -17,33 +17,21 @@
 </head>
 <body>
     <div class="header">Chat with: <span id="fName"></span></div>
-    
-    <div class="msg-box" id="displayMsgs">Connecting to server...</div>
-    
+    <div class="msg-box" id="displayMsgs">Connecting...</div>
     <button class="refresh-btn" onclick="loadMessages()">🔄 Refresh Messages</button>
-
     <a href="https://docs.google.com/forms/d/e/1FAIpQLSfmE76RL2xnBFpbccLuCy5_qB4IA-F7vkSGQ4Rl1byGQwDfZw/viewform" target="_blank" class="send-btn">➕ WRITE MESSAGE</a>
-    
     <div id="debug"></div>
 
     <script>
         var params = new URLSearchParams(window.location.search);
-        var meRaw = params.get('me') || "";
-        var friendRaw = params.get('friend') || "";
-        
-        // নামগুলো পরিষ্কার করা (বড় হাত/ছোট হাত সমস্যা দূর করতে)
-        var me = meRaw.trim().toLowerCase();
-        var friend = friendRaw.trim().toLowerCase();
-        
-        document.getElementById('fName').innerText = friendRaw;
+        var me = (params.get('me') || "").trim().toLowerCase(); 
+        var friend = (params.get('friend') || "").trim().toLowerCase();
+        document.getElementById('fName').innerText = params.get('friend') || "Friend";
 
-        // আপনার শিটের সঠিক CSV লিঙ্ক
         var sheetUrl = "https://docs.google.com/spreadsheets/d/1vCbeWnAt81SExCWhI8jYpS_jE4lYjKzL05jY9D3Yy-E/gviz/tq?tqx=out:csv";
 
         function loadMessages() {
             var box = document.getElementById('displayMsgs');
-            var debug = document.getElementById('debug');
-            
             fetch(sheetUrl)
             .then(res => res.text())
             .then(data => {
@@ -51,40 +39,29 @@
                 var html = "";
                 var foundCount = 0;
 
-                // row 1 থেকে শুরু (টাইম > মেসেজ > নাম সিরিয়াল অনুযায়ী)
                 for (var i = 1; i < rows.length; i++) {
-                    var cols = rows[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-                    
-                    if (cols.length >= 3) {
-                        var message = cols[1].replace(/"/g, "").trim();      
-                        var senderFromSheet = cols[2].replace(/"/g, "").trim() || "Unknown"; // নাম খালি থাকলে Unknown দেখাবে
-                        var senderLow = senderFromSheet.toLowerCase();
+                    // CSV কলামগুলোকে কমা দিয়ে ভাগ করার উন্নত পদ্ধতি
+                    var cols = rows[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
+                    if (cols && cols.length >= 3) {
+                        var message = cols[1].replace(/"/g, "").trim(); 
+                        var senderName = cols[2].replace(/"/g, "").trim(); 
+                        var senderLow = senderName.toLowerCase();
 
-                        // ফিল্টার: যদি মেসেজটি আপনার হয় অথবা আপনার বন্ধুর হয়
                         if (senderLow === me || senderLow === friend) {
                             var style = (senderLow === me) ? "sent" : "received";
-                            html += "<div class='"+style+"'><span class='name-label'>"+senderFromSheet+"</span>"+message+"</div>";
+                            html += "<div class='"+style+"'><span class='name-label'>"+senderName+"</span>"+message+"</div>";
                             foundCount++;
                         }
                     }
                 }
-                
-                if (foundCount > 0) {
-                    box.innerHTML = html;
-                } else {
-                    box.innerHTML = "<p style='text-align:center; color:#999; padding:20px;'>No private messages yet.<br><small>Make sure you type your name as <b>" + meRaw + "</b> in the form.</small></p>";
-                }
-                
+                box.innerHTML = foundCount > 0 ? html : "<p style='text-align:center; color:#999;'>No messages found between " + me + " and " + friend + "</p>";
                 box.scrollTop = box.scrollHeight;
-                debug.innerText = "Last Updated: " + new Date().toLocaleTimeString();
+                document.getElementById('debug').innerText = "Last Sync: " + new Date().toLocaleTimeString();
             })
-            .catch(err => {
-                box.innerHTML = "<p style='color:red; text-align:center;'>Error! Please check if the Google Sheet is 'Public' (Anyone with link can view).</p>";
-            });
+            .catch(err => { box.innerHTML = "Error loading data."; });
         }
-
         loadMessages();
-        setInterval(loadMessages, 8000); 
+        setInterval(loadMessages, 8000);
     </script>
 </body>
 </html>
