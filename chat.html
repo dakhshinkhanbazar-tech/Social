@@ -6,24 +6,28 @@
     <style>
         body { background: #e5ddd5; font-family: sans-serif; margin: 0; padding: 10px; }
         .header { background: #075e54; color: white; padding: 12px; font-weight: bold; text-align: center; border-radius: 5px; }
-        .msg-box { background: white; height: 350px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; margin: 10px 0; border-radius: 5px; }
-        .msg-item { background: #fff; padding: 8px; margin: 5px 0; border-radius: 8px; border: 1px solid #ddd; font-size: 14px; }
-        .time { font-size: 10px; color: #888; display: block; }
-        .send-btn { background: #075e54; color: white; padding: 15px; text-decoration: none; display: block; text-align: center; font-weight: bold; border-radius: 8px; }
-        .refresh-btn { background: #555; color: white; border: none; padding: 10px; width: 100%; border-radius: 5px; cursor: pointer; margin-bottom: 5px; }
+        .msg-box { background: white; height: 350px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; margin: 10px 0; border-radius: 5px; display: flex; flex-direction: column; }
+        .sent { background: #dcf8c6; padding: 10px; margin: 5px 0 5px auto; border-radius: 10px 10px 0 10px; width: fit-content; max-width: 85%; text-align: right; border: 1px solid #c7e9b4; box-shadow: 1px 1px 2px #ccc; }
+        .received { background: #fff; padding: 10px; margin: 5px auto 5px 0; border-radius: 10px 10px 10px 0; width: fit-content; max-width: 85%; border: 1px solid #ddd; box-shadow: 1px 1px 2px #ccc; }
+        .name-label { font-size: 11px; font-weight: bold; color: #075e54; display: block; margin-bottom: 3px; }
+        .send-btn { background: #075e54; color: white; padding: 15px; text-decoration: none; display: block; text-align: center; font-weight: bold; border-radius: 8px; margin-top: 10px; }
+        .refresh-btn { background: #555; color: white; border: none; padding: 8px; width: 100%; border-radius: 5px; cursor: pointer; }
     </style>
 </head>
 <body>
-    <div class="header">Chat Room</div>
-
-    <div class="msg-box" id="displayMsgs">Loading messages...</div>
-
-    <button class="refresh-btn" onclick="loadMessages()">🔄 Refresh Chat</button>
+    <div class="header">Chat with: <span id="fName"></span></div>
+    <div class="msg-box" id="displayMsgs">Loading...</div>
+    <button class="refresh-btn" onclick="loadMessages()">🔄 Refresh Messages</button>
 
     <a href="https://docs.google.com/forms/d/e/1FAIpQLSfmE76RL2xnBFpbccLuCy5_qB4IA-F7vkSGQ4Rl1byGQwDfZw/viewform" target="_blank" class="send-btn">➕ WRITE MESSAGE</a>
 
     <script>
-        // তোমার গুগল শিটের CSV লিঙ্ক
+        var params = new URLSearchParams(window.location.search);
+        var me = (params.get('me') || "").trim().toLowerCase(); 
+        var friend = (params.get('friend') || "").trim().toLowerCase();
+        var friendDisplay = params.get('friend');
+        document.getElementById('fName').innerText = friendDisplay;
+
         var sheetUrl = "https://docs.google.com/spreadsheets/d/1vCbeWnAt81SExCWhI8jYpS_jE4lYjKzL05jY9D3Yy-E/gviz/tq?tqx=out:csv";
 
         function loadMessages() {
@@ -32,33 +36,32 @@
             .then(data => {
                 var rows = data.split("\n");
                 var html = "";
-
-                // i=1 থেকে শুরু কারণ প্রথম রো হেডার
+                
                 for (var i = 1; i < rows.length; i++) {
-                    var cols = rows[i].split(",");
-                    if (cols.length >= 2) {
-                        var timestamp = cols[0].replace(/"/g, "").trim(); // Column A
-                        var message = cols[1].replace(/"/g, "").trim();  // Column B
+                    var cols = rows[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/); // নিখুঁতভাবে কলাম আলাদা করার জন্য
+                    if (cols.length >= 3) {
+                        var senderFromSheet = cols[1].replace(/"/g, "").trim();
+                        var senderLow = senderFromSheet.toLowerCase();
+                        var message = cols[2].replace(/"/g, "").trim();
 
-                        html += "<div class='msg-item'>";
-                        html += "<span>" + message + "</span>";
-                        html += "<span class='time'>" + timestamp + "</span>";
-                        html += "</div>";
+                        // ফিল্টার: যদি মেসেজটি আমার বা আমার বন্ধুর হয়
+                        if (senderLow === me || senderLow === friend) {
+                            var style = (senderLow === me) ? "sent" : "received";
+                            html += "<div class='"+style+"'><span class='name-label'>"+senderFromSheet+"</span>"+message+"</div>";
+                        }
                     }
                 }
-                document.getElementById('displayMsgs').innerHTML = html || "No messages found.";
-                
-                // অটো স্ক্রল নিচে যাবে
+                document.getElementById('displayMsgs').innerHTML = html || "No messages found for " + friendDisplay;
                 var box = document.getElementById('displayMsgs');
                 box.scrollTop = box.scrollHeight;
             })
             .catch(err => {
-                document.getElementById('displayMsgs').innerHTML = "Error loading messages. Check internet or Sheet sharing.";
+                document.getElementById('displayMsgs').innerHTML = "Error loading data!";
             });
         }
 
-        // শুরুতে একবার লোড হবে
         loadMessages();
+        setInterval(loadMessages, 8000); // প্রতি ৮ সেকেন্ডে অটো চেক করবে
     </script>
 </body>
 </html>
