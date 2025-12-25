@@ -31,6 +31,7 @@
         var meRaw = params.get('me') || "";
         var friendRaw = params.get('friend') || "";
         
+        // নামগুলো পরিষ্কার করা (বড় হাত/ছোট হাত সমস্যা দূর করতে)
         var me = meRaw.trim().toLowerCase();
         var friend = friendRaw.trim().toLowerCase();
         
@@ -50,16 +51,16 @@
                 var html = "";
                 var foundCount = 0;
 
+                // row 1 থেকে শুরু (টাইম > মেসেজ > নাম সিরিয়াল অনুযায়ী)
                 for (var i = 1; i < rows.length; i++) {
-                    // CSV কলামগুলোকে কমা দিয়ে ভাগ করা
                     var cols = rows[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
                     
                     if (cols.length >= 3) {
-                        var message = cols[1].replace(/"/g, "").trim();      // Column B তে মেসেজ
-                        var senderFromSheet = cols[2].replace(/"/g, "").trim(); // Column C তে নাম
+                        var message = cols[1].replace(/"/g, "").trim();      
+                        var senderFromSheet = cols[2].replace(/"/g, "").trim() || "Unknown"; // নাম খালি থাকলে Unknown দেখাবে
                         var senderLow = senderFromSheet.toLowerCase();
 
-                        // শুধু আপনার এবং বন্ধুর মেসেজগুলো ফিল্টার করা
+                        // ফিল্টার: যদি মেসেজটি আপনার হয় অথবা আপনার বন্ধুর হয়
                         if (senderLow === me || senderLow === friend) {
                             var style = (senderLow === me) ? "sent" : "received";
                             html += "<div class='"+style+"'><span class='name-label'>"+senderFromSheet+"</span>"+message+"</div>";
@@ -78,12 +79,12 @@
                 debug.innerText = "Last Updated: " + new Date().toLocaleTimeString();
             })
             .catch(err => {
-                box.innerHTML = "<p style='color:red; text-align:center;'>Connection Error! Check if the Google Sheet is Shared (Anyone with link can view).</p>";
+                box.innerHTML = "<p style='color:red; text-align:center;'>Error! Please check if the Google Sheet is 'Public' (Anyone with link can view).</p>";
             });
         }
 
         loadMessages();
-        setInterval(loadMessages, 10000); // ১০ সেকেন্ড পর পর অটো রিফ্রেশ
+        setInterval(loadMessages, 8000); 
     </script>
 </body>
 </html>
