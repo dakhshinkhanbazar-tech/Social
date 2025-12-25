@@ -2,126 +2,128 @@
 <html>
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat App - Button Phone</title>
+    <title>Private Chat - Button Phone</title>
     <style>
-        body { font-family: sans-serif; background: #e5ddd5; margin: 0; padding: 10px; }
-        .box { background: white; padding: 10px; border: 1px solid #ccc; margin-bottom: 10px; border-radius: 5px; }
-        input { width: 85%; padding: 8px; margin: 5px 0; border: 1px solid #ddd; }
-        button { background: #075e54; color: white; border: none; padding: 8px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 5px;}
-        #chat-window { height: 250px; overflow-y: scroll; border: 1px solid #eee; padding: 5px; background: #f9f9f9; }
-        .msg { margin: 5px 0; padding: 5px 8px; border-radius: 5px; font-size: 14px; max-width: 80%; }
-        .sent { background: #dcf8c6; margin-left: auto; text-align: right; }
-        .received { background: #fff; text-align: left; border: 1px solid #ddd; }
-        .user-link { display: block; padding: 10px; border-bottom: 1px solid #eee; color: #075e54; text-decoration: none; font-weight: bold; }
+        body { font-family: monospace; background: #000; color: #0f0; padding: 5px; }
+        .card { border: 1px solid #0f0; padding: 5px; margin-bottom: 10px; }
+        input { background: #222; color: #0f0; border: 1px solid #0f0; width: 90%; margin-bottom: 5px; padding: 3px; }
+        button { background: #0f0; color: #000; border: none; padding: 5px; cursor: pointer; font-weight: bold; }
+        #chat-window { height: 180px; overflow-y: scroll; border: 1px dashed #0f0; margin-bottom: 5px; padding: 3px; }
+        .msg { margin-bottom: 4px; font-size: 13px; border-bottom: 1px solid #222; }
     </style>
 </head>
 <body>
 
-<div id="login-ui" class="box">
-    <h3>লগইন করুন</h3>
-    <input type="text" id="user-name" placeholder="আপনার নাম">
-    <input type="number" id="user-pin" placeholder="৪ সংখ্যার পিন">
-    <button onclick="doLogin()">প্রবেশ করুন</button>
+<div id="login-ui" class="card">
+    <b>[ লগইন ]</b><br>
+    নাম: <input type="text" id="u_name" placeholder="আপনার নাম"><br>
+    পিন: <input type="number" id="u_pin" placeholder="৪ সংখ্যার পিন"><br>
+    <button onclick="login()">প্রবেশ করুন</button>
 </div>
 
-<div id="dash-ui" style="display:none;" class="box">
-    <b>স্বাগতম, <span id="display-name"></span></b> | <button onclick="location.reload()" style="width:auto; padding:3px; background:red;">লগআউট</button>
-    <hr>
-    <input type="text" id="search-box" placeholder="কার নাম খুঁজছেন?">
-    <button onclick="searchUser()">সার্চ</button>
-    <div id="results" style="margin-top:10px;"></div>
+<div id="dash-ui" style="display:none;" class="card">
+    <b>স্বাগতম: <span id="my-name"></span></b><hr>
+    খুঁজুন: <input type="text" id="s_box" placeholder="বন্ধুর নাম লিখুন">
+    <button onclick="search()">সার্চ</button>
+    <div id="res" style="margin-top:5px;"></div>
 </div>
 
-<div id="chat-ui" style="display:none;" class="box">
-    <button onclick="backToDash()" style="background:#555; width:auto;">← ব্যাকে যান</button>
-    <h4 id="chat-with">বন্ধু</h4>
+<div id="chat-ui" style="display:none;" class="card">
+    <button onclick="back()">← ফিরে যান</button><br>
+    <b>কথা হচ্ছে: <span id="chat-with"></span></b>
     <div id="chat-window"></div>
-    <input type="text" id="msg-text" placeholder="মেসেজ লিখুন...">
-    <button onclick="sendMsg()">পাঠান</button>
+    <input type="text" id="msg" placeholder="মেসেজ লিখুন">
+    <button onclick="send()">পাঠান</button>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
 <script>
-    // আপনার কনফিগারেশন
-    const firebaseConfig = {
+    // তোমার আগের ফায়ারবেস কনফিগারেশনটি এখানে বসাও
+    var config = {
       apiKey: "AIzaSyCvQ4ti0RjqmTCUZ5g5dXua_vjGNqqlyeg",
-      authDomain: "social-794e8.firebaseapp.com",
       databaseURL: "https://social-794e8-default-rtdb.firebaseio.com",
-      projectId: "social-794e8",
-      storageBucket: "social-794e8.firebasestorage.app",
-      messagingSenderId: "404116095706",
-      appId: "1:404116095706:web:9c8866965fe35dcae49be3"
+      projectId: "social-794e8"
     };
+    firebase.initializeApp(config);
+    var db = firebase.database();
+    var SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzCA5DnBiCYI-slVMgd2Lv2PNYytk0PWSHNfEl8D003LNKVzLLPazCEMBQhayCUN-g8/exec";
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzCA5DnBiCYI-slVMgd2Lv2PNYytk0PWSHNfEl8D003LNKVzLLPazCEMBQhayCUN-g8/exec";
+    var myName = "";
+    var chatID = "";
 
-    let myName = "";
-    let activeChatId = "";
-
-    function doLogin() {
-        let name = document.getElementById('user-name').value.trim();
-        let pin = document.getElementById('user-pin').value;
-        
-        fetch(`${SCRIPT_URL}?action=login&user=${name}&pin=${pin}`)
-        .then(res => res.json())
-        .then(data => {
-            if(data.status === "success") {
-                myName = data.username;
-                document.getElementById('login-ui').style.display = 'none';
-                document.getElementById('dash-ui').style.display = 'block';
-                document.getElementById('display-name').innerText = myName;
-            } else { alert("ভুল নাম বা পিন!"); }
-        }).catch(err => alert("সার্ভার সমস্যা! আবার চেষ্টা করুন।"));
+    function login() {
+        var n = document.getElementById('u_name').value;
+        var p = document.getElementById('u_pin').value;
+        // অ্যাপ স্ক্রিপ্ট থেকে লগইন চেক
+        var url = SCRIPT_URL + "?action=login&user=" + n + "&pin=" + p;
+        var x = new XMLHttpRequest();
+        x.open("GET", url, true);
+        x.onreadystatechange = function() {
+            if (x.readyState == 4 && x.status == 200) {
+                var d = JSON.parse(x.responseText);
+                if(d.status == "success") {
+                    myName = d.username;
+                    document.getElementById('login-ui').style.display = 'none';
+                    document.getElementById('dash-ui').style.display = 'block';
+                    document.getElementById('my-name').innerText = myName;
+                } else { alert("ভুল তথ্য!"); }
+            }
+        };
+        x.send();
     }
 
-    function searchUser() {
-        let q = document.getElementById('search-box').value.toLowerCase();
-        fetch(`${SCRIPT_URL}?action=search`)
-        .then(res => res.json())
-        .then(users => {
-            let html = "";
-            users.forEach(u => {
-                if(u.toLowerCase().includes(q) && u !== myName) {
-                    html += `<a href="#" class="user-link" onclick="startChat('${u}')">💬 ${u}-এর সাথে কথা বলুন</a>`;
+    function search() {
+        var q = document.getElementById('s_box').value;
+        var url = SCRIPT_URL + "?action=search";
+        var x = new XMLHttpRequest();
+        x.open("GET", url, true);
+        x.onreadystatechange = function() {
+            if (x.readyState == 4 && x.status == 200) {
+                var users = JSON.parse(x.responseText);
+                var h = "";
+                for(var i=0; i<users.length; i++) {
+                    if(users[i].toLowerCase().indexOf(q.toLowerCase()) > -1 && users[i] != myName) {
+                        h += '<div onclick="startChat(\''+users[i]+'\')">>> '+users[i]+' [চ্যাট]</div>';
+                    }
                 }
-            });
-            document.getElementById('results').innerHTML = html || "কাউকে পাওয়া যায়নি!";
-        });
+                document.getElementById('res').innerHTML = h || "পাওয়া যায়নি!";
+            }
+        };
+        x.send();
     }
 
     function startChat(friend) {
         document.getElementById('dash-ui').style.display = 'none';
         document.getElementById('chat-ui').style.display = 'block';
         document.getElementById('chat-with').innerText = friend;
-        activeChatId = [myName, friend].sort().join("_");
+        // প্রাইভেট আইডি তৈরি (A_B ফরম্যাটে)
+        var pair = [myName, friend].sort();
+        chatID = pair[0] + "_" + pair[1];
         
-        db.ref("private_chats/" + activeChatId).on("value", snap => {
-            let win = document.getElementById('chat-window');
-            win.innerHTML = "";
-            snap.forEach(child => {
-                let m = child.val();
-                let cls = m.sender === myName ? "sent" : "received";
-                win.innerHTML += `<div class="msg ${cls}"><b>${m.sender}:</b> ${m.text}</div>`;
+        db.ref("p_chats/" + chatID).limitToLast(10).on("value", function(s) {
+            var w = document.getElementById('chat-window');
+            w.innerHTML = "";
+            s.forEach(function(c) {
+                var m = c.val();
+                w.innerHTML += '<div class="msg"><b>' + m.s + ':</b> ' + m.t + '</div>';
             });
-            win.scrollTop = win.scrollHeight;
+            w.scrollTop = w.scrollHeight;
         });
     }
 
-    function sendMsg() {
-        let txt = document.getElementById('msg-text').value;
-        if(!txt) return;
-        db.ref("private_chats/" + activeChatId).push({ sender: myName, text: txt });
-        document.getElementById('msg-text').value = "";
+    function send() {
+        var t = document.getElementById('msg').value;
+        if(!t) return;
+        db.ref("p_chats/" + chatID).push({ s: myName, t: t });
+        document.getElementById('msg').value = "";
     }
 
-    function backToDash() {
+    function back() {
         document.getElementById('chat-ui').style.display = 'none';
         document.getElementById('dash-ui').style.display = 'block';
-        db.ref("private_chats/" + activeChatId).off();
+        db.ref("p_chats/" + chatID).off();
     }
 </script>
 </body>
