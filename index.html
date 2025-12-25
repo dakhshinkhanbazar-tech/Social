@@ -2,24 +2,22 @@
 <html>
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Lite Social</title>
+    <title>Lite Social - Login</title>
     <style>
-        body { background: #e5ddd5; font-family: sans-serif; text-align: center; padding: 20px; }
-        .box { background: white; padding: 20px; border: 1px solid #ccc; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        h2 { color: #075e54; }
-        input { width: 90%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; }
-        .btn { background: #075e54; color: white; border: none; padding: 12px; width: 100%; font-weight: bold; border-radius: 5px; cursor: pointer; }
+        body { background: #e5ddd5; font-family: sans-serif; text-align: center; padding: 10px; }
+        .box { background: white; padding: 20px; border: 1px solid #ccc; border-radius: 5px; max-width: 300px; margin: auto; }
+        input { width: 90%; padding: 10px; margin: 8px 0; border: 1px solid #ddd; }
+        button { background: #075e54; color: white; border: none; padding: 10px; width: 95%; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
     <div class="box">
-        <h2>Lite Social</h2>
-        <p>আপনার নাম এবং পিন দিয়ে প্রবেশ করুন</p>
-        <form action="এখানে_তোমার_Apps_Script_URL_বসাও" method="get">
+        <h3>Lite Social</h3>
+        <form action="YOUR_APPS_SCRIPT_URL" method="get">
             <input type="hidden" name="action" value="login">
-            <input type="text" name="user" placeholder="আপনার নাম" required><br>
-            <input type="number" name="pin" placeholder="৪ সংখ্যার পিন" required><br>
-            <button type="submit" class="btn">প্রবেশ করুন</button>
+            <input type="text" name="user" placeholder="Your Name" required><br>
+            <input type="number" name="pin" placeholder="Your PIN" required><br>
+            <button type="submit">LOGIN</button>
         </form>
     </div>
 </body>
