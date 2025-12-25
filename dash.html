@@ -1,45 +1,15 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
-    <style>
-        body { background: #e5ddd5; font-family: sans-serif; padding: 10px; margin: 0; }
-        .header { background: #075e54; color: white; padding: 15px; text-align: center; font-weight: bold; }
-        .box { background: white; padding: 15px; border: 1px solid #ccc; margin-top: 10px; border-radius: 8px; }
-        input { width: 70%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
-        button { background: #075e54; color: white; border: none; padding: 10px; font-weight: bold; cursor: pointer; border-radius: 4px; }
-        .user-link { display: block; padding: 15px; border-bottom: 1px solid #eee; color: #075e54; text-decoration: none; font-weight: bold; background: #f9f9f9; margin-top: 10px; border-radius: 5px; border-left: 5px solid #075e54; }
-    </style>
-</head>
 <body>
-    <div class="header">User: <span id="me"></span></div>
-    <div class="box">
-        <input type="text" id="searchInput" placeholder="Search name...">
-        <button onclick="searchUser()">Search</button>
-        <div id="results"></div>
-    </div>
-
-    <script>
-        var params = new URLSearchParams(window.location.search);
-        var myName = params.get('user') || "User";
-        document.getElementById('me').innerText = myName;
-
-        // এখানে তোমার বন্ধুদের নাম দাও
-        var users = ["Bayzid", "Rashed", "Alamin", "Sabbir", "Mithu"];
-
-        function searchUser() {
-            var q = document.getElementById('searchInput').value.trim().toLowerCase();
-            var resDiv = document.getElementById('results');
-            var html = "";
-            for (var i = 0; i < users.length; i++) {
-                if (users[i].toLowerCase().includes(q) && users[i] !== myName) {
-                    // এখানে চ্যাট পেজের লিঙ্ক তৈরি হচ্ছে
-                    html += '<a class="user-link" href="chat.html?me=' + encodeURIComponent(myName) + '&friend=' + encodeURIComponent(users[i]) + '">Click to Chat with ' + users[i] + '</a>';
-                }
-            }
-            resDiv.innerHTML = html || "No user found.";
-        }
-    </script>
+    <h2>Chatting Room</h2>
+    <hr>
+    <form action="https://script.google.com/macros/s/AKfycbzCA5DnBiCYI-slVMgd2Lv2PNYytk0PWSHNfEl8D003LNKVzLLPazCEMBQhayCUN-g8/exec" method="get">
+        <input type="hidden" name="action" value="send">
+        Message: <br>
+        <textarea name="msg" rows="4" cols="20"></textarea><br><br>
+        <input type="submit" value="SEND MESSAGE">
+    </form>
+    <br>
+    <a href="dash.html">Back to Dashboard</a>
 </body>
 </html>
