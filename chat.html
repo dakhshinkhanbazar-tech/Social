@@ -1,40 +1,15 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat</title>
-    <style>
-        body { background: #e5ddd5; font-family: sans-serif; margin: 0; }
-        .header { background: #075e54; color: white; padding: 15px; font-weight: bold; text-align: center; }
-        .chat-box { padding: 10px; height: 300px; overflow-y: auto; background: white; margin: 10px; border-radius: 5px; }
-        .input-area { padding: 10px; background: #eee; position: fixed; bottom: 0; width: 100%; display: flex; }
-        input { flex: 1; padding: 10px; border: 1px solid #ddd; }
-        button { background: #075e54; color: white; border: none; padding: 10px; margin-left: 5px; }
-    </style>
-</head>
 <body>
-    <div class="header">Chat with: <span id="friendName"></span></div>
-    <div class="chat-box" id="msgBox">Messages will appear here...</div>
-    
-    <div class="input-area">
-        <input type="text" id="msgInput" placeholder="Type message...">
-        <button onclick="sendMsg()">Send</button>
-    </div>
-
-    <script>
-        var params = new URLSearchParams(window.location.search);
-        var me = params.get('me');
-        var friend = params.get('friend');
-        
-        if(!friend) {
-            document.body.innerHTML = "<h2>Error: Chat user not found!</h2>";
-        } else {
-            document.getElementById('friendName').innerText = friend;
-        }
-
-        function sendMsg() {
-            alert("Message feature coming soon! Now testing page link.");
-        }
-    </script>
+    <h2>Chatting Room</h2>
+    <hr>
+    <form action="https://script.google.com/macros/s/AKfycbzCA5DnBiCYI-slVMgd2Lv2PNYytk0PWSHNfEl8D003LNKVzLLPazCEMBQhayCUN-g8/exec" method="get">
+        <input type="hidden" name="action" value="send">
+        Message: <br>
+        <textarea name="msg" rows="4" cols="20"></textarea><br><br>
+        <input type="submit" value="SEND MESSAGE">
+    </form>
+    <br>
+    <a href="dash.html">Back to Dashboard</a>
 </body>
 </html>
