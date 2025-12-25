@@ -5,63 +5,76 @@
     <title>Private Chat</title>
     <style>
         body { background: #e5ddd5; font-family: sans-serif; margin: 0; padding: 10px; }
-        .header { background: #075e54; color: white; padding: 12px; font-weight: bold; text-align: center; border-radius: 5px; }
-        .msg-box { background: white; height: 350px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; margin: 10px 0; border-radius: 5px; display: flex; flex-direction: column; }
+        .header { background: #075e54; color: white; padding: 12px; font-weight: bold; text-align: center; border-radius: 5px; position: sticky; top: 0; }
+        .msg-box { background: white; height: 380px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; margin: 10px 0; border-radius: 5px; display: flex; flex-direction: column; }
         .sent { background: #dcf8c6; padding: 10px; margin: 5px 0 5px auto; border-radius: 10px 10px 0 10px; width: fit-content; max-width: 85%; text-align: right; border: 1px solid #c7e9b4; box-shadow: 1px 1px 2px #ccc; }
         .received { background: #fff; padding: 10px; margin: 5px auto 5px 0; border-radius: 10px 10px 10px 0; width: fit-content; max-width: 85%; border: 1px solid #ddd; box-shadow: 1px 1px 2px #ccc; }
-        .name-label { font-size: 11px; font-weight: bold; color: #075e54; display: block; margin-bottom: 3px; }
-        .send-btn { background: #075e54; color: white; padding: 15px; text-decoration: none; display: block; text-align: center; font-weight: bold; border-radius: 8px; margin-top: 10px; }
-        .refresh-btn { background: #555; color: white; border: none; padding: 8px; width: 100%; border-radius: 5px; cursor: pointer; }
+        .name-label { font-size: 10px; font-weight: bold; color: #075e54; display: block; margin-bottom: 3px; }
+        .send-btn { background: #075e54; color: white; padding: 15px; text-decoration: none; display: block; text-align: center; font-weight: bold; border-radius: 8px; font-size: 16px; }
+        .refresh-btn { background: #555; color: white; border: none; padding: 8px; width: 100%; border-radius: 5px; cursor: pointer; margin-bottom: 5px; }
     </style>
 </head>
 <body>
     <div class="header">Chat with: <span id="fName"></span></div>
-    <div class="msg-box" id="displayMsgs">Loading...</div>
+    
+    <div class="msg-box" id="displayMsgs">Connecting to sheet...</div>
+    
     <button class="refresh-btn" onclick="loadMessages()">🔄 Refresh Messages</button>
 
     <a href="https://docs.google.com/forms/d/e/1FAIpQLSfmE76RL2xnBFpbccLuCy5_qB4IA-F7vkSGQ4Rl1byGQwDfZw/viewform" target="_blank" class="send-btn">➕ WRITE MESSAGE</a>
 
     <script>
+        // URL থেকে নাম সংগ্রহ
         var params = new URLSearchParams(window.location.search);
         var me = (params.get('me') || "").trim().toLowerCase(); 
         var friend = (params.get('friend') || "").trim().toLowerCase();
-        var friendDisplay = params.get('friend');
+        var friendDisplay = params.get('friend') || "Friend";
         document.getElementById('fName').innerText = friendDisplay;
 
+        // তোমার শিটের সঠিক CSV লিঙ্ক
         var sheetUrl = "https://docs.google.com/spreadsheets/d/1vCbeWnAt81SExCWhI8jYpS_jE4lYjKzL05jY9D3Yy-E/gviz/tq?tqx=out:csv";
 
         function loadMessages() {
+            var box = document.getElementById('displayMsgs');
+            
             fetch(sheetUrl)
             .then(res => res.text())
             .then(data => {
                 var rows = data.split("\n");
                 var html = "";
-                
-                for (var i = 1; i < rows.length; i++) {
-                    var cols = rows[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/); // নিখুঁতভাবে কলাম আলাদা করার জন্য
-                    if (cols.length >= 3) {
-                        var senderFromSheet = cols[1].replace(/"/g, "").trim();
-                        var senderLow = senderFromSheet.toLowerCase();
-                        var message = cols[2].replace(/"/g, "").trim();
+                var foundAny = false;
 
-                        // ফিল্টার: যদি মেসেজটি আমার বা আমার বন্ধুর হয়
+                // row 1 থেকে শুরু (টাইম > মেসেজ > নাম সিরিয়াল অনুযায়ী)
+                for (var i = 1; i < rows.length; i++) {
+                    // CSV কলামগুলোকে কমা দিয়ে ভাগ করা
+                    var cols = rows[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                    
+                    if (cols.length >= 3) {
+                        var message = cols[1].replace(/"/g, "").trim(); 
+                        var senderName = cols[2].replace(/"/g, "").trim(); 
+                        var senderLow = senderName.toLowerCase();
+
+                        // শুধু আমার এবং বন্ধুর মেসেজগুলো দেখাবে
                         if (senderLow === me || senderLow === friend) {
                             var style = (senderLow === me) ? "sent" : "received";
-                            html += "<div class='"+style+"'><span class='name-label'>"+senderFromSheet+"</span>"+message+"</div>";
+                            html += "<div class='"+style+"'><span class='name-label'>"+senderName+"</span>"+message+"</div>";
+                            foundAny = true;
                         }
                     }
                 }
-                document.getElementById('displayMsgs').innerHTML = html || "No messages found for " + friendDisplay;
-                var box = document.getElementById('displayMsgs');
-                box.scrollTop = box.scrollHeight;
+                
+                box.innerHTML = foundAny ? html : "<p style='text-align:center; color:#999;'>No private messages yet with " + friendDisplay + "</p>";
+                box.scrollTop = box.scrollHeight; // একদম নিচে নিয়ে যাবে
             })
             .catch(err => {
-                document.getElementById('displayMsgs').innerHTML = "Error loading data!";
+                box.innerHTML = "<p style='color:red; text-align:center;'>Error: শিট থেকে ডাটা আসছে না। দয়া করে শিটটি Share > Anyone with link > Viewer করুন।</p>";
             });
         }
 
+        // পেজ খুললেই লোড হবে
         loadMessages();
-        setInterval(loadMessages, 8000); // প্রতি ৮ সেকেন্ডে অটো চেক করবে
+        // প্রতি ৮ সেকেন্ডে অটো আপডেট হবে
+        setInterval(loadMessages, 8000);
     </script>
 </body>
 </html>
