@@ -2,44 +2,63 @@
 <html>
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lite Social - Dashboard</title>
+    <title>Dashboard</title>
     <style>
-        body { background: #e5ddd5; font-family: sans-serif; padding: 10px; }
-        .box { background: white; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
-        .user-link { display: block; padding: 12px; border-bottom: 1px solid #eee; color: #075e54; text-decoration: none; font-weight: bold; background: #f9f9f9; margin-top: 5px; border-radius: 4px; }
-        input[type="text"] { width: 65%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
-        input[type="submit"] { background: #075e54; color: white; border: none; padding: 10px; font-weight: bold; cursor: pointer; border-radius: 4px; }
+        body { background: #e5ddd5; font-family: sans-serif; padding: 10px; margin: 0; }
+        .header { background: #075e54; color: white; padding: 10px; font-weight: bold; }
+        .box { background: white; padding: 10px; border: 1px solid #ccc; margin-top: 10px; }
+        .user-link { display: block; padding: 12px; border-bottom: 1px solid #eee; color: #075e54; text-decoration: none; font-weight: bold; background: #f9f9f9; margin-top: 5px; }
+        input { width: 70%; padding: 10px; border: 1px solid #ddd; }
+        button { background: #075e54; color: white; border: none; padding: 10px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
+    <div class="header">Welcome: <span id="me"></span></div>
+    
     <div class="box">
-        <b>Welcome: <span id="me"></span></b>
-        <hr>
-        <form action="https://script.google.com/macros/s/AKfycbwBkgt2OomCLz8CqqEW9tTxF1Dae2u3HNOkNtC6_mKggbilxI703ewvGIh1fAHnkgr5/exec" method="get">
-            <input type="hidden" name="action" value="search">
-            <input type="hidden" name="myname" id="myname-input">
-            <input type="text" name="q" placeholder="Search user..." required>
-            <input type="submit" value="Search">
-        </form>
+        <input type="text" id="searchInput" placeholder="Enter Name...">
+        <button onclick="searchUser()">Search</button>
         <div id="results" style="margin-top:15px;"></div>
     </div>
 
-    <script>
-        var params = new URLSearchParams(window.location.search);
-        var me = params.get('user');
-        document.getElementById('me').innerText = me;
-        document.getElementById('myname-input').value = me;
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
-        var results = params.get('results');
-        if(results) {
-            var list = results.split(",");
-            var html = "<strong>Search Results:</strong>";
-            list.forEach(function(u) {
-                if(u.trim() !== "" && u !== me) {
-                    html += '<a class="user-link" href="chat.html?me='+encodeURIComponent(me)+'&friend='+encodeURIComponent(u)+'">💬 Chat with '+u+'</a>';
-                }
+    <script>
+        // Firebase Configuration
+        var config = {
+            apiKey: "AIzaSyCvQ4ti0RjqmTCUZ5g5dXua_vjGNqqlyeg",
+            databaseURL: "https://social-794e8-default-rtdb.firebaseio.com",
+            projectId: "social-794e8"
+        };
+        firebase.initializeApp(config);
+        var db = firebase.database();
+
+        // Get My Name from URL
+        var params = new URLSearchParams(window.location.search);
+        var myName = params.get('user');
+        document.getElementById('me').innerText = myName;
+
+        function searchUser() {
+            var q = document.getElementById('searchInput').value.toLowerCase();
+            var resDiv = document.getElementById('results');
+            resDiv.innerHTML = "Searching...";
+
+            // ফায়ারবেস থেকে সরাসরি ইউজার লিস্ট আনা (যদি ডাটাবেসে ইউজার থাকে)
+            // অথবা আমরা চ্যাট আইডি থেকেও ইউজার খুঁজে পেতে পারি
+            db.ref("users").once("value", function(snapshot) {
+                var html = "<strong>Results:</strong>";
+                var found = false;
+                snapshot.forEach(function(child) {
+                    var uName = child.val().name;
+                    if(uName.toLowerCase().includes(q) && uName !== myName) {
+                        html += '<a class="user-link" href="chat.html?me='+encodeURIComponent(myName)+'&friend='+encodeURIComponent(uName)+'">💬 Chat with '+uName+'</a>';
+                        found = true;
+                    }
+                });
+                if(!found) html = "No user found!";
+                resDiv.innerHTML = html;
             });
-            document.getElementById('results').innerHTML = html;
         }
     </script>
 </body>
