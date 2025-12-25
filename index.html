@@ -1,24 +1,11 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lite Social - Login</title>
-    <style>
-        body { background: #e5ddd5; font-family: sans-serif; text-align: center; padding: 10px; }
-        .box { background: white; padding: 20px; border: 1px solid #ccc; border-radius: 5px; max-width: 300px; margin: auto; }
-        input { width: 90%; padding: 10px; margin: 8px 0; border: 1px solid #ddd; border-radius: 4px; }
-        button { background: #075e54; color: white; border: none; padding: 12px; width: 95%; font-weight: bold; cursor: pointer; border-radius: 4px; }
-    </style>
-</head>
 <body>
-    <div class="box">
-        <h3>Lite Social Login</h3>
-        <form action="https://script.google.com/macros/s/AKfycbwBkgt2OomCLz8CqqEW9tTxF1Dae2u3HNOkNtC6_mKggbilxI703ewvGIh1fAHnkgr5/exec" method="get">
-            <input type="hidden" name="action" value="login">
-            <input type="text" name="user" placeholder="Enter Name" required><br>
-            <input type="number" name="pin" placeholder="Enter PIN" required><br>
-            <button type="submit">LOGIN</button>
-        </form>
-    </div>
+    <h2>Lite Social - Login</h2>
+    <form action="dash.html" method="get">
+        Name: <input type="text" name="user" required><br><br>
+        PIN: <input type="number" name="pin" required><br><br>
+        <input type="submit" value="ENTER">
+    </form>
 </body>
 </html>
